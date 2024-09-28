@@ -18,7 +18,7 @@ public class Jogo {
 
     // Método que seleciona aleatoriamente uma palavra de uma lista predefinida
     public String selecionaPalavraAleatoria() {
-        String[] palavras = {"HIENA", "BANDA", "CARRO", "CAVALO", "OBJETOS"};
+        String[] palavras = {"HIENA", "BANDA", "CARRO", "CAVALO", "GARFO"};
         Random random = new Random();
         return palavras[random.nextInt(palavras.length)];
     }
