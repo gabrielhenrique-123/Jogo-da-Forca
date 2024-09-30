@@ -8,7 +8,7 @@ import java.util.List;
 public class InterfaceGrafica {
     private Jogo jogo;
     private JFrame frame;
-    private JLabel palavraLabel, tentativasLabel, forcaLabel, letrasEscolhidasLabel, letrasRestantesLabel;
+    private JLabel palavraLabel, tentativasLabel, forcaLabel, letrasEscolhidasLabel, letrasRestantesLabel, dicaLabel;
     private JTextField inputLetra;
     private JButton confirmarButton;
     private JLabel imagemForcaLabel;
@@ -17,7 +17,7 @@ public class InterfaceGrafica {
     public InterfaceGrafica() {
         frame = new JFrame("Jogo da Forca");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(500, 500);
+        frame.setSize(700, 700);
         telaInicial();  // Chama a tela inicial ao abrir o jogo
     }
 
@@ -65,8 +65,11 @@ public class InterfaceGrafica {
         tentativasLabel = new JLabel("Tentativas Restantes: " + jogo.getTentativasRestantes());
         letrasEscolhidasLabel = new JLabel("Letras Escolhidas: ");
         letrasRestantesLabel = new JLabel("Letras Restantes: " + getLetrasRestantes());
+        dicaLabel = new JLabel("Dica: " + jogo.getDica());
 
         imagemForcaLabel = new JLabel(new ImageIcon(jogo.getForca().getImagemForca()));
+
+        // Adiciona o JLabel para exibir a dica
 
         // Painel para a linha de entrada
         JPanel painelEntrada = new JPanel();
@@ -89,6 +92,7 @@ public class InterfaceGrafica {
         painelJogo.add(tentativasLabel);
         painelJogo.add(letrasEscolhidasLabel);
         painelJogo.add(letrasRestantesLabel);  // Adiciona letras restantes
+        painelJogo.add(dicaLabel);  // Adiciona a dica
         painelJogo.add(imagemForcaLabel);
         painelJogo.add(painelEntrada);  // Adiciona o painel de entrada
 

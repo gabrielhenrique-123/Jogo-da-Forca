@@ -1,5 +1,6 @@
 public class Palavra {
     private String palavra;
+    private String dica;
     private boolean[] letrasAdivinhadas;
 
     public Palavra(String palavra) {
