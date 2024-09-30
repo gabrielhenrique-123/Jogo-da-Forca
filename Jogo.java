@@ -25,11 +25,11 @@ public class Jogo {
         dificuldade--;
         String[][] palavras = {
             // Fácil
-            {"CASA", "GATO", "SOL", "ÁGUA", "FLOR"},
+            {"CASA", "GATO", "SOL", "AGUA", "FLOR"},
             // Médio
             {"COMPUTADOR", "LIVRO", "TELEFONE", "ESCOLA", "JANELA"},
             // Difícil
-            {"PSICÓLOGO", "FOTOGRAFIA", "TORNADO", "ASTRONOMIA", "ARQUITETURA"}
+            {"PSICOLOGO", "FOTOGRAFIA", "TORNADO", "ASTRONOMIA", "ARQUITETURA"}
         };
         return palavras[dificuldade][choosen];    
     }
@@ -64,6 +64,17 @@ public class Jogo {
         }
         return true;
     }
+
+    public List<Character> getLetrasNaoAdivinhadas() {
+        List<Character> letrasNaoAdivinhadas = new ArrayList<>();
+        for (int i = 0; i < palavra.length(); i++) {
+            if (!palavra.isLetraAdivinhada(i)) {  // Verifica se a letra não foi adivinhada
+                letrasNaoAdivinhadas.add(palavra.getPalavra().charAt(i));
+            }
+        }
+        return letrasNaoAdivinhadas;
+    }
+    
 
     // Método que retorna a dica associada à palavra
     public String getDica() {
