@@ -2,19 +2,23 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.stream.Collectors;
+import java.io.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class InterfaceGrafica {
     private Jogo jogo;
     private JFrame frame;
-    private JLabel palavraLabel, tentativasLabel, forcaLabel, letrasEscolhidasLabel, letrasRestantesLabel, dicaLabel;
-    private JTextField inputLetra;
-    private JButton confirmarButton;
+    private JLabel palavraLabel, tentativasLabel, letrasEscolhidasLabel, letrasRestantesLabel, dicaLabel;
+    private JPanel painelLetras;
+    private JButton[] botoesLetras;  // Botões para as letras
     private JLabel imagemForcaLabel;
     private JPanel painelJogo;
+    private int vitorias, derrotas;  // Contagem de vitórias e derrotas
+    private final String pontuacaoFile = "pontuacao.txt";  // Arquivo para salvar pontuação
 
     public InterfaceGrafica() {
+        carregarPontuacao();  // Carrega a pontuação do arquivo
         frame = new JFrame("Jogo da Forca");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(700, 700);
@@ -22,7 +26,7 @@ public class InterfaceGrafica {
     }
 
     private void telaInicial() {
-        // Painel inicial com o título e o botão para começar o jogo
+        // Painel inicial com o título e os botões para começar o jogo
         JPanel painelInicial = new JPanel();
         painelInicial.setLayout(new BoxLayout(painelInicial, BoxLayout.Y_AXIS));
 
@@ -30,17 +34,28 @@ public class InterfaceGrafica {
         titulo.setFont(new Font("Arial", Font.BOLD, 24));
         titulo.setAlignmentX(Component.CENTER_ALIGNMENT);
 
+        // ComboBox para seleção de dificuldade
+        String[] opcoesDificuldade = {"Fácil", "Médio", "Difícil"};
+        JComboBox<String> comboDificuldade = new JComboBox<>(opcoesDificuldade);
+        comboDificuldade.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        // Definindo um tamanho menor para o JComboBox
+        comboDificuldade.setPreferredSize(new Dimension(100, 30)); // Ajuste o tamanho conforme necessário
+
         JButton comecarButton = new JButton("Começar Jogo");
         comecarButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         comecarButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                iniciarJogo();
+                int dificuldade = comboDificuldade.getSelectedIndex() + 1;  // Ajusta para 1, 2 ou 3
+                iniciarJogo(dificuldade);
             }
         });
 
         painelInicial.add(Box.createRigidArea(new Dimension(0, 50)));  // Espaçamento
         painelInicial.add(titulo);
+        painelInicial.add(Box.createRigidArea(new Dimension(0, 20)));  // Espaçamento
+        painelInicial.add(comboDificuldade);  // Adiciona o JComboBox ao painel
         painelInicial.add(Box.createRigidArea(new Dimension(0, 20)));  // Espaçamento
         painelInicial.add(comecarButton);
 
@@ -48,69 +63,101 @@ public class InterfaceGrafica {
         frame.setVisible(true);
     }
 
-    private void iniciarJogo() {
+    private void iniciarJogo(int dificuldade) {
         // Limpa a tela inicial
         frame.getContentPane().removeAll();
         frame.revalidate();
         frame.repaint();
 
         // Inicializa o jogo
-        jogo = new Jogo();
+        jogo = new Jogo(dificuldade);
 
         // Painel do jogo
         painelJogo = new JPanel();
         painelJogo.setLayout(new BoxLayout(painelJogo, BoxLayout.Y_AXIS));
 
+        // Centralizando as informações do jogo
         palavraLabel = new JLabel("Palavra: " + jogo.getPalavraParcial());
+        palavraLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         tentativasLabel = new JLabel("Tentativas Restantes: " + jogo.getTentativasRestantes());
+        tentativasLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         letrasEscolhidasLabel = new JLabel("Letras Escolhidas: ");
+        letrasEscolhidasLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         letrasRestantesLabel = new JLabel("Letras Restantes: " + getLetrasRestantes());
+        letrasRestantesLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         dicaLabel = new JLabel("Dica: " + jogo.getDica());
+        dicaLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         imagemForcaLabel = new JLabel(new ImageIcon(jogo.getForca().getImagemForca()));
+        imagemForcaLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Adiciona o JLabel para exibir a dica
+        // Adicionando os componentes centralizados ao painel do jogo
+        painelJogo.add(palavraLabel);
+        painelJogo.add(Box.createRigidArea(new Dimension(0, 20)));  // Espaçamento entre linhas
+        painelJogo.add(tentativasLabel);
+        painelJogo.add(Box.createRigidArea(new Dimension(0, 20)));
+        painelJogo.add(letrasEscolhidasLabel);
+        painelJogo.add(Box.createRigidArea(new Dimension(0, 20)));
+        painelJogo.add(letrasRestantesLabel);  // Adiciona letras restantes
+        painelJogo.add(Box.createRigidArea(new Dimension(0, 20)));
+        painelJogo.add(dicaLabel);  // Adiciona a dica
+        painelJogo.add(Box.createRigidArea(new Dimension(0, 20)));
+        painelJogo.add(imagemForcaLabel);
+        painelJogo.add(Box.createRigidArea(new Dimension(0, 30)));  // Espaçamento maior para a forca
 
-        // Painel para a linha de entrada
-        JPanel painelEntrada = new JPanel();
-        inputLetra = new JTextField(1);  // Campo para digitar a letra
-        confirmarButton = new JButton("Confirmar");
-        confirmarButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                char letra = inputLetra.getText().toUpperCase().charAt(0);
-                if (jogo.tentarLetra(letra)) {
+        // Criação dos botões das letras do alfabeto
+        painelLetras = new JPanel();
+        painelLetras.setLayout(new GridLayout(3, 9, 10, 10));  // 3 linhas de letras com espaçamento de 10px
+        botoesLetras = new JButton[26];
+        char[] alfabeto = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
+
+        for (int i = 0; i < alfabeto.length; i++) {
+            char letra = alfabeto[i];
+            botoesLetras[i] = new JButton(String.valueOf(letra));
+
+            // Definindo o tamanho menor dos botões
+            botoesLetras[i].setPreferredSize(new Dimension(50, 50));
+
+            // Configurando a margem interna dos botões
+            botoesLetras[i].setMargin(new Insets(5, 5, 5, 5));  // Pequena margem interna
+
+            // Definindo a cor de fundo dos botões para um vermelho mais claro
+            botoesLetras[i].setBackground(new Color(255, 102, 102));  // Vermelho mais claro
+            botoesLetras[i].setOpaque(true);
+            botoesLetras[i].setBorderPainted(false);
+
+            botoesLetras[i].addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    tentarLetra(letra);
                     atualizarTela();
                 }
-            }
-        });
+            });
+            painelLetras.add(botoesLetras[i]);
+        }
 
-        painelEntrada.add(inputLetra);
-        painelEntrada.add(confirmarButton);
-
-        painelJogo.add(palavraLabel);
-        painelJogo.add(tentativasLabel);
-        painelJogo.add(letrasEscolhidasLabel);
-        painelJogo.add(letrasRestantesLabel);  // Adiciona letras restantes
-        painelJogo.add(dicaLabel);  // Adiciona a dica
-        painelJogo.add(imagemForcaLabel);
-        painelJogo.add(painelEntrada);  // Adiciona o painel de entrada
+        painelLetras.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));  // Espaçamento uniforme em torno dos botões
+        painelJogo.add(painelLetras);  // Adiciona os botões de letras
 
         frame.add(painelJogo);
         frame.revalidate();
         frame.repaint();
     }
 
-    // Método que gera as letras restantes, subtraindo as já escolhidas do alfabeto
-    private String getLetrasRestantes() {
-        String alfabeto = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        List<Character> letrasEscolhidas = jogo.getLetrasEscolhidas();
-
-        return alfabeto.chars()
-                       .mapToObj(c -> (char) c)
-                       .filter(c -> !letrasEscolhidas.contains(c))
-                       .map(String::valueOf)
-                       .collect(Collectors.joining(", "));
+    private void tentarLetra(char letra) {
+        if (jogo.tentarLetra(letra)) {
+            for (JButton botao : botoesLetras) {
+                if (botao.getText().charAt(0) == letra) {
+                    botao.setEnabled(false);  // Desativa o botão
+                    botao.setBackground(Color.DARK_GRAY);  // Muda a cor de fundo para cinza escuro
+                    break;
+                }
+            }
+        }
     }
 
     private void atualizarTela() {
@@ -119,9 +166,9 @@ public class InterfaceGrafica {
 
         // Atualiza letras escolhidas
         String letrasEscolhidasStr = jogo.getLetrasEscolhidas()
-                                          .stream()
-                                          .map(String::valueOf)
-                                          .collect(Collectors.joining(", "));
+                .stream()
+                .map(String::valueOf)
+                .collect(Collectors.joining(", "));
         letrasEscolhidasLabel.setText("Letras Escolhidas: " + letrasEscolhidasStr);
 
         // Atualiza letras restantes
@@ -131,19 +178,66 @@ public class InterfaceGrafica {
         imagemForcaLabel.setIcon(new ImageIcon(jogo.getForca().getImagemForca()));
 
         if (jogo.jogoTerminado()) {
+            if (jogo.getTentativasRestantes() > 0) {
+                vitorias++;
+            } else {
+                derrotas++;
+            }
+            salvarPontuacao();  // Salva a pontuação após cada rodada
             mostrarTelaFinal(jogo.getTentativasRestantes() > 0);
         }
     }
 
+    // Método que gera as letras restantes, subtraindo as já escolhidas do alfabeto
+    private String getLetrasRestantes() {
+        String alfabeto = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        List<Character> letrasEscolhidas = jogo.getLetrasEscolhidas();
+
+        return alfabeto.chars()
+                .mapToObj(c -> (char) c)
+                .filter(c -> !letrasEscolhidas.contains(c))
+                .map(String::valueOf)
+                .collect(Collectors.joining(", "));
+    }
+
     private void mostrarTelaFinal(boolean venceu) {
         String mensagem = venceu ? "Você venceu!" : "Você perdeu!";
+        mensagem += String.format("\nVitórias: %d\nDerrotas: %d", vitorias, derrotas);  // Mostra a pontuação
         int opcao = JOptionPane.showOptionDialog(frame, mensagem + "\nDeseja jogar novamente?", "Fim de Jogo",
                 JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE, null, new Object[]{"Jogar Novamente", "Sair"}, "Jogar Novamente");
 
         if (opcao == JOptionPane.YES_OPTION) {
-            iniciarJogo();  // Reinicia o jogo
+            int dificuldade = 0;  // Ajuste a lógica para obter a dificuldade corretamente
+            iniciarJogo(dificuldade);  // Reinicia o jogo
         } else {
             frame.dispose();  // Fecha o jogo
+        }
+    }
+
+    // Método para carregar a pontuação do arquivo
+    private void carregarPontuacao() {
+        try (BufferedReader br = new BufferedReader(new FileReader(pontuacaoFile))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] partes = line.split(":");
+                if (partes[0].trim().equals("Vitórias")) {
+                    vitorias = Integer.parseInt(partes[1].trim());
+                } else if (partes[0].trim().equals("Derrotas")) {
+                    derrotas = Integer.parseInt(partes[1].trim());
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Erro ao carregar pontuação: " + e.getMessage());
+        }
+    }
+
+    // Método para salvar a pontuação no arquivo
+    private void salvarPontuacao() {
+        try (PrintWriter pw = new PrintWriter(new FileWriter(pontuacaoFile))) {
+            pw.println("Vitórias: " + vitorias);
+            pw.println("Derrotas: " + derrotas);
+        } catch (IOException e) {
+            System.out.println("Erro ao salvar pontuação: " + e.getMessage());
         }
     }
 

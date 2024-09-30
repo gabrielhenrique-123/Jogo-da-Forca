@@ -10,26 +10,42 @@ public class Jogo {
     private String dica;  // A dica associada à palavra
 
     // Construtor da classe Jogo
-    public Jogo() {
+    public Jogo(int dificuldade) {
         Random random = new Random();
         int choosen = random.nextInt(5);
-        palavra = new Palavra(selecionaPalavraAleatoria(choosen));  // Inicializa a palavra com uma palavra aleatória
-        dica = selecionaDicaPalavraAleatoria(choosen);  // Inicializa a dica associada
+        palavra = new Palavra(selecionaPalavraAleatoria(choosen, dificuldade));  // Inicializa a palavra com uma palavra aleatória
+        dica = selecionaDicaPalavraAleatoria(choosen, dificuldade);  // Inicializa a dica associada
         forca = new Forca();                                 // Inicializa a forca
         tentativasRestantes = 6;                             // Define o número máximo de tentativas
         letrasEscolhidas = new ArrayList<>();                // Inicializa a lista de letras escolhidas
     }
 
     // Método que seleciona aleatoriamente uma palavra de uma lista predefinida
-    public String selecionaPalavraAleatoria(int choosen) {
-        String[] palavras = {"HIENA", "BANDA", "CARRO", "CAVALO", "GARFO"};
-        return palavras[choosen];    
+    public String selecionaPalavraAleatoria(int choosen, int dificuldade) {
+        dificuldade--;
+        String[][] palavras = {
+            // Fácil
+            {"CASA", "GATO", "SOL", "ÁGUA", "FLOR"},
+            // Médio
+            {"COMPUTADOR", "LIVRO", "TELEFONE", "ESCOLA", "JANELA"},
+            // Difícil
+            {"PSICÓLOGO", "FOTOGRAFIA", "TORNADO", "ASTRONOMIA", "ARQUITETURA"}
+        };
+        return palavras[dificuldade][choosen];    
     }
 
     // Método que seleciona a dica associada à palavra
-    public String selecionaDicaPalavraAleatoria(int choosen) {
-        String[] dicas = {"ANIMAL", "MÚSICA", "MEIO DE TRANSPORTE", "ANIMAL", "OBJETO DE COZINHA"};
-        return dicas[choosen];    
+    public String selecionaDicaPalavraAleatoria(int choosen, int dificuldade) {
+        dificuldade--;
+        String[][] dicas = {
+            // Dicas para as palavras fáceis
+            {"Lugar onde se mora.", "Animal de estimação que gosta de dormir.", "Estrela que ilumina o dia.", "Líquido essencial para a vida.", "Parte colorida das plantas."},
+            // Dicas para as palavras médias
+            {"Máquina que processa informações.", "Conjunto de folhas com informações escritas.", "Dispositivo usado para se comunicar à distância.", "Lugar onde se aprende.", "Abertura em uma parede para passagem de luz e ar."},
+            // Dicas para as palavras difíceis
+            {"Profissional que estuda a mente humana.", "Arte de capturar imagens.", "Fenômeno meteorológico de ventos fortes e giratórios.", "Ciência que estuda os astros e o universo.", "Arte e ciência de projetar edifícios."}
+        };
+        return dicas[dificuldade][choosen];    
     }
 
     // Método para processar a tentativa de adivinhar uma letra
