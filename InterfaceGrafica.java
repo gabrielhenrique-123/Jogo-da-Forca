@@ -17,9 +17,12 @@ public class InterfaceGrafica {
     private JPanel painelJogo;
     private int vitorias, derrotas;  // Contagem de vitórias e derrotas
     private final String pontuacaoFile = "pontuacao.txt";  // Arquivo para salvar pontuação
+    private final String estadoJogoFile = "estado_jogo.txt";  // Arquivo para salvar o estado do jogo
+    private boolean jogoAnteriorExiste;  // Indica se há um jogo anterior salvo
 
     public InterfaceGrafica() {
         carregarPontuacao();  // Carrega a pontuação do arquivo
+        carregarEstadoJogo();  // Verifica se há um jogo salvo
         frame = new JFrame("Jogo da Forca");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(700, 700);
@@ -47,9 +50,10 @@ public class InterfaceGrafica {
         painelCombo.add(comboDificuldade);
         comboDificuldade.setPreferredSize(new Dimension(100, 30));
          
-    
         JPanel painelBotao = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        JButton comecarButton = new JButton("Começar Jogo");
+        
+        // Botão para iniciar um novo jogo
+        JButton comecarButton = new JButton("Começar Novo Jogo");
         painelBotao.add(comecarButton);
     
         comecarButton.addActionListener(new ActionListener() {
@@ -59,19 +63,29 @@ public class InterfaceGrafica {
                 iniciarJogo(dificuldade);
             }
         });
+
+        // Botão para continuar o jogo anterior
+        JButton continuarButton = new JButton("Continuar Jogo Anterior");
+        continuarButton.setEnabled(jogoAnteriorExiste);
+        painelBotao.add(continuarButton);
+
+        continuarButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                continuarJogoAnterior();  
+            }
+        });
     
-        painelInicial.add(Box.createRigidArea(new Dimension(0, 50)));  // Espaçamento
+        painelInicial.add(Box.createRigidArea(new Dimension(0, 50)));  
         painelInicial.add(titulo);
-        painelInicial.add(Box.createRigidArea(new Dimension(0, 20)));  // Espaçamento
-        painelInicial.add(painelCombo);  // Adiciona o painel com o ComboBox
-        painelInicial.add(Box.createRigidArea(new Dimension(0, 20)));  // Espaçamento
-        painelInicial.add(painelBotao);  // Adiciona o painel com o botão
+        painelInicial.add(Box.createRigidArea(new Dimension(0, 20)));  
+        painelInicial.add(painelCombo);  
+        painelInicial.add(Box.createRigidArea(new Dimension(0, 20)));  
+        painelInicial.add(painelBotao);  
     
         frame.add(painelInicial);
         frame.setVisible(true);
     }
-    
-    
 
     private void iniciarJogo(int dificuldade) {
         // Limpa a tela inicial
@@ -81,7 +95,17 @@ public class InterfaceGrafica {
     
         // Inicializa o jogo
         jogo = new Jogo(dificuldade);
-    
+        montarTelaJogo();
+    }
+
+    private void continuarJogoAnterior() {
+        frame.getContentPane().removeAll();
+        frame.revalidate();
+        frame.repaint();    
+        montarTelaJogo();
+    }
+
+    private void montarTelaJogo() {
         // Painel do jogo
         painelJogo = new JPanel();
         painelJogo.setLayout(new BoxLayout(painelJogo, BoxLayout.Y_AXIS));
@@ -93,7 +117,7 @@ public class InterfaceGrafica {
         tentativasLabel = new JLabel("Tentativas Restantes: " + jogo.getTentativasRestantes());
         tentativasLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
     
-        letrasEscolhidasLabel = new JLabel("Letras Escolhidas: ");
+        letrasEscolhidasLabel = new JLabel("Letras Escolhidas: " + jogo.getLetrasEscolhidas());
         letrasEscolhidasLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
     
         letrasRestantesLabel = new JLabel("Letras Restantes: " + getLetrasRestantes());
@@ -140,11 +164,18 @@ public class InterfaceGrafica {
             botoesLetras[i].setOpaque(true);
             botoesLetras[i].setBorderPainted(false);
     
+            // Verifica se a letra foi escolhida e desativa o botão se necessário
+            if (jogo.getLetrasEscolhidas().contains(letra)) {
+                botoesLetras[i].setEnabled(false);  // Desativa o botão
+                botoesLetras[i].setBackground(Color.DARK_GRAY);  // Muda a cor de fundo para cinza escuro
+            }
+    
             botoesLetras[i].addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     tentarLetra(letra);
                     atualizarTela();
+                    salvarEstadoJogo();  // Salva o estado do jogo após cada jogada
                 }
             });
             painelLetras.add(botoesLetras[i]);
@@ -169,7 +200,6 @@ public class InterfaceGrafica {
         frame.revalidate();
         frame.repaint();
     }
-    
 
     private void tentarLetra(char letra) {
         if (jogo.tentarLetra(letra)) {
@@ -181,25 +211,25 @@ public class InterfaceGrafica {
                 }
             }
         }
-    }
+    } 
 
     private void atualizarTela() {
         palavraLabel.setText("Palavra: " + jogo.getPalavraParcial());
         tentativasLabel.setText("Tentativas Restantes: " + jogo.getTentativasRestantes());
-
+    
         // Atualiza letras escolhidas
         String letrasEscolhidasStr = jogo.getLetrasEscolhidas()
                 .stream()
                 .map(String::valueOf)
                 .collect(Collectors.joining(", "));
         letrasEscolhidasLabel.setText("Letras Escolhidas: " + letrasEscolhidasStr);
-
+    
         // Atualiza letras restantes
         letrasRestantesLabel.setText("Letras Restantes: " + getLetrasRestantes());
-
+    
         // Atualiza a imagem da forca
         imagemForcaLabel.setIcon(new ImageIcon(jogo.getForca().getImagemForca()));
-
+    
         if (jogo.jogoTerminado()) {
             if (jogo.getTentativasRestantes() > 0) {
                 vitorias++;
@@ -210,8 +240,8 @@ public class InterfaceGrafica {
             mostrarTelaFinal(jogo.getTentativasRestantes() > 0);
         }
     }
+    
 
-    // Método que gera as letras restantes, subtraindo as já escolhidas do alfabeto
     private String getLetrasRestantes() {
         String alfabeto = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         List<Character> letrasEscolhidas = jogo.getLetrasEscolhidas();
@@ -264,25 +294,49 @@ public class InterfaceGrafica {
         }
     }
 
+    // Método para carregar o estado do jogo de um arquivo
+    private void carregarEstadoJogo() {
+        try (BufferedReader br = new BufferedReader(new FileReader(estadoJogoFile))) {
+            String palavra = br.readLine();
+            String letrasEscolhidas = br.readLine();
+            int tentativasRestantes = Integer.parseInt(br.readLine());
+            String dica = br.readLine();
+            // Reconstruindo o jogo salvo
+            jogo = new Jogo(palavra, letrasEscolhidas, tentativasRestantes, dica);
+            jogoAnteriorExiste = true;  // Há um jogo salvo
+        } catch (IOException e) {
+            System.out.println("Nenhum estado de jogo anterior encontrado: " + e.getMessage());
+        }
+    }
+
+    // Método para salvar o estado do jogo em um arquivo
+    private void salvarEstadoJogo() {
+        try (PrintWriter pw = new PrintWriter(new FileWriter(estadoJogoFile))) {
+            pw.println(jogo.getPalavra());  // Salva a palavra
+            pw.println(jogo.getLetrasEscolhidas().stream()
+                           .map(String::valueOf)
+                           .collect(Collectors.joining()));  // Salva as letras escolhidas
+            pw.println(jogo.getTentativasRestantes());  // Salva o número de tentativas restantes
+            pw.println(jogo.getDica());
+        } catch (IOException e) {
+            System.out.println("Erro ao salvar estado do jogo: " + e.getMessage());
+        }
+    }
+
     private void mostrarDica() {
-        // Busca as letras que ainda não foram adivinhadas
         List<Character> letrasRestantes = jogo.getLetrasNaoAdivinhadas();
 
         if (!letrasRestantes.isEmpty()) {
-            // Seleciona uma letra aleatória das que não foram adivinhadas
             Random random = new Random();
             char letraDica = letrasRestantes.get(random.nextInt(letrasRestantes.size()));
 
-            // Marca a letra como adivinhada
             jogo.tentarLetra(letraDica);
 
-            // Atualiza a tela para mostrar a dica
             atualizarTela();
         } else {
             JOptionPane.showMessageDialog(frame, "Não há mais letras disponíveis para dica!", "Dica", JOptionPane.INFORMATION_MESSAGE);
         }
     }
-
 
     public static void main(String[] args) {
         new InterfaceGrafica();

@@ -7,7 +7,7 @@ public class Palavra {
         letrasAdivinhadas = new boolean[palavra.length()];  // Inicializa o array com o tamanho da palavra
     }
 
-    public String getPalavra(){
+    public String getPalavra() {
         return palavra;
     }
 
@@ -32,9 +32,9 @@ public class Palavra {
             } else {
                 parcial.append('_');  // Mostra _ para letras não adivinhadas
             }
-            parcial.append(' ');
+            parcial.append(' ');  // Espaço entre as letras
         }
-        return parcial.toString().trim();
+        return parcial.toString().trim();  // Remove espaços adicionais
     }
 
     // Retorna o comprimento da palavra
