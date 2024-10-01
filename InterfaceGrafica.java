@@ -18,6 +18,7 @@ public class InterfaceGrafica {
   private int vitorias, derrotas;  
   private final String pontuacaoFile = "pontuacao.txt";  
   private final String estadoJogoFile = "estado_jogo.txt"; 
+  private final String historicoFile = "historico.txt";  // Arquivo para salvar o histórico de palavras e pontuação
   private boolean jogoAnteriorExiste;  
 
   public InterfaceGrafica() {
@@ -70,10 +71,10 @@ public class InterfaceGrafica {
     painelBotao.add(continuarButton);
 
     continuarButton.addActionListener(new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            continuarJogoAnterior();  
-        }
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        continuarJogoAnterior();  
+      }
     });
 
     painelInicial.add(Box.createRigidArea(new Dimension(0, 50)));  
@@ -242,10 +243,10 @@ public class InterfaceGrafica {
   
 
   private String getLetrasRestantes() {
-      String alfabeto = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-      List<Character> letrasEscolhidas = jogo.getLetrasEscolhidas();
+    String alfabeto = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    List<Character> letrasEscolhidas = jogo.getLetrasEscolhidas();
 
-      return alfabeto.chars()
+    return alfabeto.chars()
             .mapToObj(c -> (char) c)
             .filter(c -> !letrasEscolhidas.contains(c))
             .map(String::valueOf)
@@ -256,14 +257,28 @@ public class InterfaceGrafica {
   private void mostrarTelaFinal(boolean venceu) {
     String mensagem = venceu ? "Você venceu!" : "Você perdeu!";
     mensagem += String.format("\nVitórias: %d\nDerrotas: %d", vitorias, derrotas);  // Mostra a pontuação
+    
+    // Salva a palavra e o resultado no histórico
+    salvarHistorico(jogo.getPalavra(), venceu); 
+
     int opcao = JOptionPane.showOptionDialog(frame, mensagem + "\nDeseja jogar novamente?", "Fim de Jogo",
-    JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE, null, new Object[]{"Jogar Novamente", "Sair"}, "Jogar Novamente");
+                JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE, null, new Object[]{"Jogar Novamente", "Sair"}, "Jogar Novamente");
 
     if (opcao == JOptionPane.YES_OPTION) {
       frame.getContentPane().removeAll();
       telaInicial();
     } else {
         frame.dispose();  // Fecha o jogo
+    }
+  }
+
+  // Método para salvar o histórico de palavras e pontuação
+  private void salvarHistorico(String palavra, boolean venceu) {
+    try (PrintWriter pw = new PrintWriter(new FileWriter(historicoFile, true))) {
+      pw.println(String.format("Palavra: %s | Resultado: %s | Vitórias: %d | Derrotas: %d", 
+          palavra, venceu ? "Venceu" : "Perdeu", vitorias, derrotas));
+    } catch (IOException e) {
+        System.out.println("Erro ao salvar histórico: " + e.getMessage());
     }
   }
 
@@ -314,8 +329,8 @@ public class InterfaceGrafica {
     try (PrintWriter pw = new PrintWriter(new FileWriter(estadoJogoFile))) {
       pw.println(jogo.getPalavra());  // Salva a palavra
       pw.println(jogo.getLetrasEscolhidas().stream()
-                    .map(String::valueOf)
-                    .collect(Collectors.joining()));  // Salva as letras escolhidas
+              .map(String::valueOf)
+              .collect(Collectors.joining()));  // Salva as letras escolhidas
       pw.println(jogo.getTentativasRestantes());  // Salva o número de tentativas restantes
       pw.println(jogo.getDica());
     } catch (IOException e) {

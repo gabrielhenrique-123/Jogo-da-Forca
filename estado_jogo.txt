@@ -1,4 +1,4 @@
-FLOR
-DFHILOR
-3
-Parte colorida das plantas.
+CASA
+CAS
+6
+Lugar onde se mora.
