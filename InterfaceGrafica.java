@@ -265,23 +265,23 @@ public class InterfaceGrafica {
     }
 
     private void mostrarDica() {
-    // Busca as letras que ainda não foram adivinhadas
-    List<Character> letrasRestantes = jogo.getLetrasNaoAdivinhadas();
+        // Busca as letras que ainda não foram adivinhadas
+        List<Character> letrasRestantes = jogo.getLetrasNaoAdivinhadas();
 
-    if (!letrasRestantes.isEmpty()) {
-        // Seleciona uma letra aleatória das que não foram adivinhadas
-        Random random = new Random();
-        char letraDica = letrasRestantes.get(random.nextInt(letrasRestantes.size()));
+        if (!letrasRestantes.isEmpty()) {
+            // Seleciona uma letra aleatória das que não foram adivinhadas
+            Random random = new Random();
+            char letraDica = letrasRestantes.get(random.nextInt(letrasRestantes.size()));
 
-        // Marca a letra como adivinhada
-        jogo.tentarLetra(letraDica);
+            // Marca a letra como adivinhada
+            jogo.tentarLetra(letraDica);
 
-        // Atualiza a tela para mostrar a dica
-        atualizarTela();
-    } else {
-        JOptionPane.showMessageDialog(frame, "Não há mais letras disponíveis para dica!", "Dica", JOptionPane.INFORMATION_MESSAGE);
+            // Atualiza a tela para mostrar a dica
+            atualizarTela();
+        } else {
+            JOptionPane.showMessageDialog(frame, "Não há mais letras disponíveis para dica!", "Dica", JOptionPane.INFORMATION_MESSAGE);
+        }
     }
-}
 
 
     public static void main(String[] args) {
